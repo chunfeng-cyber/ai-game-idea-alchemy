@@ -41,7 +41,7 @@ npm run dev
 
 ### 中文海报字体
 
-Windows 自动使用微软雅黑或黑体；macOS 自动使用 PingFang SC；Linux 查找常见 Noto CJK 路径。Ubuntu/Debian：
+Windows 自动使用微软雅黑或黑体；macOS 依次查找 PingFang SC、Heiti SC 和 Noto CJK；Linux 查找常见 Noto CJK 路径。Ubuntu/Debian：
 
 ```bash
 sudo apt-get update
