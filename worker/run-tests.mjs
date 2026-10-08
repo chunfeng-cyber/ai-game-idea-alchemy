@@ -11,10 +11,10 @@ const tests = (await readdir(resolve(root, "tests")))
 if (!tests.length) throw new Error("No test files found");
 // Bound process parallelism on developer machines and CI. Native image/font
 // renderers allocate their own worker pools, so limit simultaneous test files.
-// Windows font initialization can contend across independent renderer processes.
-// Match the app's serial generation on that platform, including cold CI hosts.
+// Native Windows/macOS fonts can contend across independent renderer processes.
+// Match the app's serial generation on those platforms, including cold CI hosts.
 // Every test still runs in its own file.
-const concurrency = process.platform === "win32" ? 1 : 2;
+const concurrency = ["win32", "darwin"].includes(process.platform) ? 1 : 2;
 const child = spawn(process.execPath, ["--test", `--test-concurrency=${concurrency}`, ...tests], { cwd: root, stdio: "inherit", windowsHide: true });
 child.on("error", error => { console.error(error.message); process.exitCode = 1; });
 child.on("exit", (code, signal) => { process.exitCode = code ?? (signal ? 1 : 0); });
