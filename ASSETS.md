@@ -11,7 +11,7 @@
 | 文件 | 尺寸 | 用途/当前证据 | 授权状态 |
 | --- | --- | --- | --- |
 | `public/app-icon-1024.png` | 1024×1024 | 既有应用图标素材；未找到该文件的原始许可记录 | 所有者已确认，MIT |
-| `public/og.png` | 1731×909 | 社交分享图；`worker/index.ts` 引用 | 所有者已确认，MIT |
+| `public/og.png` | 1774×887 | 2026-10-08按所有者请求使用内置imagegen生成的项目概念预览；README与`worker/index.ts`引用。提示词见[生成记录](Docs/features/open-source-readiness/09-project-preview.md) | 所有者要求用于开源项目，沿用MIT |
 | `public/gameplay.jpg` | 480×853 | 既有玩法示例图；与 HTML 的玩法图 base64 完全同一字节内容 | 所有者已确认，MIT |
 | `public/report-icons.jpg` | 900×600 | 既有报告图标图集；与 HTML 的报告图集 base64 完全同一字节内容 | 所有者已确认，MIT |
 | `public/trend-icons-2026-08-20-v1.png` | 1983×793 | 既有热点图标图集；保留的历史静态资产，不代表实时热榜数据 | 所有者已确认，MIT |
