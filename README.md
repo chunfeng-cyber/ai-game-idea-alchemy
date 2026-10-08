@@ -48,7 +48,7 @@ sudo apt-get update
 sudo apt-get install fonts-noto-cjk
 ```
 
-也可设置 `ALCHEMY_FONT_FILE` 指向有权使用的中文 TTF/OTF/TTC/OTC 文件，`ALCHEMY_FONT_FAMILY` 指定字体家族。模型设置显示字体检查结果。缺少字体会明确停止海报排版并保存方案和已完成的游戏图片；安装字体、重启后点击继续生成即可，不重复调用已成功的模型。macOS/Linux 路径已测试，真机结果以实际 CI 为准。
+也可设置 `ALCHEMY_FONT_FILE` 指向有权使用的中文 TTF/OTF/TTC/OTC 文件，`ALCHEMY_FONT_FAMILY` 指定字体家族。模型设置显示字体检查结果。缺少字体会明确停止海报排版并保存方案和已完成的游戏图片；安装字体、重启后点击继续生成即可，不重复调用已成功的模型。Windows、macOS、Linux 已通过真实 GitHub CI，字体仍需在使用者本机实际可用。
 
 Windows 图片处理统一使用单个 libvips 工作线程，以缓解回归中复现的原生堆损坏退出；本机生成任务仍按原有方式串行执行。其他平台保留库的默认线程设置。
 
@@ -111,6 +111,8 @@ npm audit
 `npm test` 先构建，再执行 `tests/` 中全部 `*.test.mjs`；`npm run test:unit` 跳过构建，需已存在构建产物。测试用本机模拟供应商验证 API、设置、失败恢复、重绘和海报链路，不调用收费模型，不能证明任意真实账户的调用权限。
 
 `typecheck` 检查 TypeScript 网页处理器；ESLint 检查实际 JS/TS 模块。`.github/workflows/ci.yml` 配置 Linux/Windows/macOS 与 Node 22/24，并执行完整 `npm audit`；只有实际 CI 运行成功才能记为对应平台通过。在线依赖漏洞检查包括开发和可选依赖，离线安装输出不能代替安全审查。
+
+2026-10-08 的[六组跨平台 CI](https://github.com/chunfeng-cyber/ai-game-idea-alchemy/actions/runs/37734983115)已全部通过。Windows/macOS 的测试文件串行执行，避免多个独立原生字体进程在冷启动环境中竞争；应用生成任务也串行执行。
 
 结构：`worker/index.ts` 为静态网页与 MCP 路由，`worker/local-web.mjs` 为 HTTP 边界，`public/alchemy-source.html` 为交互壳，CSS、安全校验、素材目录、图集和业务脚本分别在公开模块；`worker/codex-sidecar.mjs` 组织本机生成，配置、API 流程、热点解析、来源验证和海报渲染各有独立模块。`worker/build.mjs` 仅编译处理器和复制公开资产；运行数据与用户配置保持在原本机目录。
 
