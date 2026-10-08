@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "region",
+          "country",
+          "channel",
+          "shortLabel",
+          "label",
+          "icon",
+          "freshness",
+          "evidence",
+          "whyGameable",
+          "risk",
+          "sourceTitle",
+          "sourceUrl",
+          "sourcePublishedAt"
+        ],
+        "properties": {
+          "region": { "type": "string", "enum": ["全球", "中国", "欧美", "东南亚", "日韩", "拉美", "中东"] },
+          "country": { "type": "string", "minLength": 1 },
+          "channel": { "type": "string", "minLength": 1 },
+          "shortLabel": { "type": "string", "minLength": 1, "maxLength": 24 },
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "icon": { "type": "string", "minLength": 1, "maxLength": 4 },
+          "freshness": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "evidence": { "type": "string", "minLength": 1, "maxLength": 220 },
+          "whyGameable": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "risk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "sourceTitle": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "sourceUrl": { "type": "string", "pattern": "^https://" },
+          "sourcePublishedAt": { "type": "string" }
+        }
+      }
+    }
+  }
+}

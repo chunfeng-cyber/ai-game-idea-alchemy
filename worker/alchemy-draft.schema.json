@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gameName",
+    "rarity",
+    "tagline",
+    "marketOpportunity",
+    "coreGameplay",
+    "adHook",
+    "artDirection",
+    "recipe",
+    "aiCompletion",
+    "control",
+    "action",
+    "mechanic",
+    "gameType",
+    "artStyle",
+    "topic",
+    "trendCatalyst",
+    "synthesisJudgement",
+    "referenceImageCaption",
+    "imagePrompt",
+    "sources",
+    "icons"
+  ],
+  "properties": {
+    "gameName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "普通",
+        "稀有",
+        "史诗",
+        "传说"
+      ]
+    },
+    "tagline": {
+      "type": "string",
+      "minLength": 1
+    },
+    "marketOpportunity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coreGameplay": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adHook": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artDirection": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recipe": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aiCompletion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "control": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mechanic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gameType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artStyle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trendCatalyst": {
+      "type": "string",
+      "minLength": 1
+    },
+    "synthesisJudgement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "referenceImageCaption": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "url",
+          "publishedAt"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "publishedAt": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "icons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "market",
+        "gameplay",
+        "hook",
+        "art",
+        "recipe",
+        "ai"
+      ],
+      "properties": {
+        "market": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "gameplay": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "hook": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "art": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "recipe": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "ai": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        }
+      }
+    },
+    "imagePrompt": {
+      "type": "string",
+      "minLength": 40
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "checkJs": false,
+    "noEmitOnError": true,
+    "esModuleInterop": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "worker",
+    "outDir": "dist/server",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "worker/index.ts",
+    "worker/alchemy-mcp.mjs"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "ai-game-idea-alchemy",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "node worker/local-dev.mjs",
+    "dev:web": "node worker/local-web.mjs --development",
+    "local": "node worker/local-dev.mjs",
+    "alchemy:codex": "node worker/codex-sidecar.mjs",
+    "mcp:gateway": "node worker/mcp-gateway.mjs",
+    "build": "node worker/build.mjs",
+    "start": "node worker/local-dev.mjs --production",
+    "start:web": "node worker/local-web.mjs",
+    "test": "npm run build && node worker/run-tests.mjs",
+    "test:unit": "node worker/run-tests.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit --incremental false"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "sharp": "0.35.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.19.19",
+    "eslint": "10.12.0",
+    "globals": "16.4.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.59.3"
+  },
+  "optionalDependencies": {
+    "@openai/codex": "0.147.0"
+  },
+  "type": "module"
+}

@@ -1,0 +1,155 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
+import { randomFillSync } from 'node:crypto';
+import { once } from 'node:events';
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, utimesSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import sharp from 'sharp';
+
+test('independent APIs, safe settings, busy lock, image-only generation and restart work over HTTP', { timeout: 30000 }, async t => {
+  const temp = mkdtempSync(join(tmpdir(), 'alchemy-provider-integration-'));
+  const runtime = join(temp, 'runtime');
+  const generated = join(temp, 'generated');
+  mkdirSync(runtime);
+  const report = { gameName: '蚊尽其用', rarity: '史诗', tagline: '一拍清场', marketOpportunity: '验证玩法', coreGameplay: '清理蚊子并避开障碍', adHook: '连击清理', artDirection: '清楚可读的场景', recipe: '硬约束：清理；AI补全：蚊子', aiCompletion: '保留清理', control: '滑动挥拍', action: '清理蚊子', mechanic: '连击蓄电', gameType: '休闲动作', artStyle: '卡通3D', topic: '夏夜卧室', trendCatalyst: '热门话题', synthesisJudgement: '动作一致', referenceImageCaption: '游戏画面', sources: [], icons: {} };
+  writeFileSync(join(runtime, 'latest-result.json'), JSON.stringify({ view: 'report', report, imageUrl: 'http://localhost:3000/generated/old.png', stateVersion: 1, materialIds: ['clean'] }));
+  const rgb = Buffer.alloc(384 * 216 * 3);
+  randomFillSync(rgb);
+  const png = await sharp(rgb, { raw: { width: 384, height: 216, channels: 3 } }).png().toBuffer();
+  assert.ok(png.length > 10000);
+  mkdirSync(generated);
+  writeFileSync(join(generated, 'old.png'), png);
+  let resolveImageStarted;
+  const imageStarted = new Promise(resolve => { resolveImageStarted = resolve; });
+  let releaseImage;
+  const imageGate = new Promise(resolve => { releaseImage = resolve; });
+  let chatGenerations = 0;
+  let chatDirectoryReads = 0;
+  let imageGenerations = 0;
+  let submitted;
+  const json = (res, body) => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
+  const chatServer = createServer(async (req, res) => {
+    assert.equal(req.headers.authorization, 'Bearer text-test-secret');
+    if (req.url === '/v1/models') { chatDirectoryReads++; json(res, { data: [{ id: 'chat-test' }] }); }
+    else { chatGenerations++; json(res, {}); }
+  });
+  const imageServer = createServer(async (req, res) => {
+    assert.equal(req.headers.authorization, 'Bearer image-test-secret');
+    if (req.url === '/v1/models') { json(res, { data: [{ id: 'image-test-v2' }] }); return; }
+    assert.equal(req.url, '/v1/images/generations');
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    submitted = JSON.parse(body);
+    imageGenerations++;
+    resolveImageStarted();
+    await imageGate;
+    json(res, { data: [{ b64_json: png.toString('base64') }] });
+  });
+  await Promise.all([new Promise(resolve => chatServer.listen(0, '127.0.0.1', resolve)), new Promise(resolve => imageServer.listen(0, '127.0.0.1', resolve))]);
+  const portServer = createServer();
+  await new Promise(resolve => portServer.listen(0, '127.0.0.1', resolve));
+  const port = portServer.address().port;
+  await new Promise(resolve => portServer.close(resolve));
+  let child;
+  let logs = '';
+  const env = { ...process.env, ALCHEMY_ENV_FILE: '', ALCHEMY_CODEX_PORT: String(port), ALCHEMY_RUNTIME_DIR: runtime, ALCHEMY_GENERATED_DIR: generated, ALCHEMY_PROVIDER_MODE: 'api', ALCHEMY_FALLBACK_MODE: 'none', ALCHEMY_CHAT_API_BASE_URL: `http://127.0.0.1:${chatServer.address().port}/v1`, ALCHEMY_IMAGE_API_BASE_URL: `http://127.0.0.1:${imageServer.address().port}/v1`, ALCHEMY_CHAT_API_KEY: 'text-test-secret', ALCHEMY_IMAGE_API_KEY: 'image-test-secret', ALCHEMY_CHAT_MODEL: 'chat-test', ALCHEMY_IMAGE_MODEL: 'image-test', ALCHEMY_CHAT_API_FORMAT: 'openai', ALCHEMY_IMAGE_API_FORMAT: 'openai' };
+  const stop = async () => { if (child && child.exitCode === null && child.signalCode === null) { const exited = once(child, 'exit'); child.kill(); await exited; } };
+  const start = async () => {
+    child = spawn(process.execPath, ['worker/codex-sidecar.mjs'], { cwd: resolve('.'), env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    child.stdout.on('data', chunk => { logs += chunk; });
+    child.stderr.on('data', chunk => { logs += chunk; });
+    for (let attempt = 0; attempt < 50; attempt++) {
+      try { await api('/health'); return; } catch { if (child.exitCode !== null) throw new Error(`Isolated sidecar exited: ${logs}`); await new Promise(resolve => setTimeout(resolve, 100)); }
+    }
+    throw new Error('Isolated sidecar did not start');
+  };
+  const api = async (path, body) => {
+    const response = await fetch(`http://127.0.0.1:${port}${path}`, { method: body ? 'POST' : 'GET', headers: { Origin: 'http://localhost:3000', 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(10000) });
+    return { status: response.status, body: await response.json() };
+  };
+  t.after(async () => {
+    releaseImage();
+    await stop();
+    chatServer.closeAllConnections(); imageServer.closeAllConnections();
+    await Promise.all([new Promise(resolve => chatServer.close(resolve)), new Promise(resolve => imageServer.close(resolve))]);
+    assert.ok(temp.startsWith(join(tmpdir(), 'alchemy-provider-integration-')));
+    rmSync(temp, { recursive: true, force: true });
+  });
+  await start();
+  const migrated = await api('/api/result');
+  assert.equal(migrated.status, 200);
+  assert.equal(migrated.body.posterLayoutVersion, 3);
+  assert.equal(migrated.body.stateVersion, 1);
+  assert.deepEqual(migrated.body.report, report);
+  assert.deepEqual(migrated.body.materialIds, ['clean']);
+  assert.equal(migrated.body.posterUrl, 'http://localhost:3000/generated/poster-v3-old.png');
+  assert.equal(migrated.body.cardUrl, migrated.body.posterUrl);
+  assert.equal(chatGenerations + imageGenerations, 0, 'layout migration cannot call paid models');
+  const expiredImage = join(generated, 'alchemy-obsolete.png');
+  const thirtyOneDaysAgo = new Date(Date.now() - 31 * 86400000);
+  writeFileSync(expiredImage, png);
+  utimesSync(expiredImage, thirtyOneDaysAgo, thirtyOneDaysAgo);
+  const preview = (await api('/api/maintenance')).body;
+  assert.deepEqual(preview.policy, { mode: 'manual', retentionDays: 30 });
+  assert.equal(preview.candidateFiles, 1);
+  assert.equal(preview.candidateBytes, png.length);
+  assert.match(preview.planToken, /^[a-f0-9]{64}$/);
+  assert.equal((await api('/api/maintenance/cleanup', {})).status, 400);
+  writeFileSync(expiredImage, png); // Changed after preview: stale approval is rejected.
+  assert.equal((await api('/api/maintenance/cleanup', { planToken: preview.planToken })).status, 409);
+  utimesSync(expiredImage, thirtyOneDaysAgo, thirtyOneDaysAgo);
+  const refreshedPreview = (await api('/api/maintenance')).body;
+  const cleanup = await api('/api/maintenance/cleanup', { planToken: refreshedPreview.planToken });
+  assert.equal(cleanup.status, 200);
+  assert.equal(cleanup.body.removedFiles, 1);
+  assert.equal(existsSync(expiredImage), false);
+  assert.equal(existsSync(join(generated, 'old.png')), true);
+  assert.equal((await api('/api/generate', { prompt: 'too short' })).status, 400);
+  assert.equal((await api('/api/generate', 'not an object')).status, 400);
+  assert.equal((await api('/health')).body.busy, false);
+  const before = await api('/api/settings');
+  assert.ok(!JSON.stringify(before).includes('test-secret'));
+  const save = await api('/api/settings', { image: { model: 'image-test-v2', size: '16:9', quality: 'low' } });
+  assert.equal(save.status, 200);
+  assert.deepEqual(save.body.chat, before.body.chat);
+  assert.equal((await api('/api/settings/test', { kind: 'chat' })).body.modelListed, true);
+  assert.equal((await api('/api/settings/test', { kind: 'image' })).body.modelListed, true);
+  const invalid = await api('/api/settings', { image: { apiBaseUrl: 'file:///unsafe' } });
+  assert.equal(invalid.status, 400);
+  assert.equal((await api('/api/settings')).body.image.model, 'image-test-v2');
+  await api('/api/settings', { chat: { model: '' } });
+  const directoriesBeforeRemake = chatDirectoryReads;
+  const regenerate = api('/api/regenerate-image', { requestId: 'test-game-frame', sourceStateVersion: 1 });
+  await imageStarted;
+  assert.equal((await api('/api/settings', { chat: { model: 'should-not-save' } })).status, 409);
+  assert.equal((await api('/api/maintenance/cleanup', { planToken: refreshedPreview.planToken })).status, 409);
+  releaseImage();
+  const result = await regenerate;
+  assert.equal(result.status, 200);
+  assert.equal(chatGenerations, 0);
+  assert.equal(chatDirectoryReads, directoriesBeforeRemake, 'image-only generation must never query the chat provider even without a chat model');
+  assert.equal(imageGenerations, 1);
+  assert.equal(submitted.model, 'image-test-v2');
+  assert.ok(submitted.prompt.includes('固定游戏镜头') && submitted.prompt.includes('HUD'));
+  assert.deepEqual(result.body.report, report);
+  assert.deepEqual(result.body.materialIds, ['clean']);
+  assert.equal(result.body.provider, 'api-image-remake');
+  assert.ok(readFileSync(join(generated, new URL(result.body.posterUrl).pathname.split('/').pop())).length > 10000);
+  assert.match(new URL(result.body.imageUrl).pathname, /^\/generated\/alchemy-[a-f0-9-]{36}\.png$/);
+  assert.equal(result.body.posterWidth, 1600);
+  assert.equal(result.body.cardUrl, result.body.posterUrl);
+  assert.equal((await api('/health')).body.busy, false);
+  assert.equal((await api('/api/regenerate-image', { requestId: 'stale-card', sourceStateVersion: 1 })).status, 409);
+  await api('/api/settings', { chat: { model: 'chat-test' } });
+  await stop(); await start();
+  const restored = await api('/api/settings');
+  assert.equal(restored.body.image.model, 'image-test-v2');
+  assert.equal(restored.body.chat.model, 'chat-test');
+  const restoredPoster = await api('/api/result');
+  assert.equal(restoredPoster.body.posterUrl, result.body.posterUrl);
+  assert.deepEqual(restoredPoster.body.report, report);
+  assert.ok(!logs.includes('text-test-secret') && !logs.includes('image-test-secret'));
+});

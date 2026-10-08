@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 游戏创意炼金器</title>
+  
+  <link rel="stylesheet" href="/alchemy-ui.css?rev=release-20261007">
+  <script id="alchemy-security" src="/alchemy-security.js?rev=release-20261007"></script>
+</head>
+<body>
+<div id="ai-alchemy-prototype">
+  
+  <link rel="stylesheet" href="/alchemy-model-settings.css?rev=release-20261007">
+
+  <div class="alchemy-phone" role="application" aria-label="创意炼金交互原型">
+    <section class="alchemy-select-view" id="alchemy-select-view">
+      <header class="alchemy-head">
+        <h1>创意炼金</h1>
+        <div class="alchemy-head-actions">
+          <button class="alchemy-settings-trigger" type="button" data-model-settings>模型设置</button>
+          <div class="alchemy-world-state" id="alchemy-world-state"><i data-lucide="radio" aria-hidden="true"></i><span>正在读取实时来源</span></div>
+          <button class="alchemy-record-hint" id="alchemy-fullscreen" type="button"><i data-lucide="maximize-2" aria-hidden="true"></i><span>全屏录制</span></button>
+        </div>
+      </header>
+
+      <nav class="alchemy-tabs" role="tablist" aria-label="材料类别">
+        <button class="alchemy-tab" id="alchemy-control-tab" type="button" role="tab" aria-selected="true" aria-controls="alchemy-field" data-tab="control"><span><i data-lucide="hand" aria-hidden="true"></i>操作</span></button>
+        <button class="alchemy-tab" id="alchemy-gameplay-tab" type="button" role="tab" aria-selected="false" aria-controls="alchemy-field" data-tab="gameplay"><span><i data-lucide="gamepad-2" aria-hidden="true"></i>玩法</span></button>
+        <button class="alchemy-tab" id="alchemy-visual-tab" type="button" role="tab" aria-selected="false" aria-controls="alchemy-field" data-tab="visual"><span><i data-lucide="palette" aria-hidden="true"></i>美术风格</span></button>
+        <button class="alchemy-tab" id="alchemy-topic-tab" type="button" role="tab" aria-selected="false" aria-controls="alchemy-field" data-tab="topic"><span><i data-lucide="library" aria-hidden="true"></i>题材</span></button>
+        <button class="alchemy-tab" id="alchemy-trend-tab" type="button" role="tab" aria-selected="false" aria-controls="alchemy-field" data-tab="trend"><span><i data-lucide="radio" aria-hidden="true"></i>实时</span></button>
+      </nav>
+
+      <div class="alchemy-tab-note" id="alchemy-tab-note">选择玩家实际使用的控制方式</div>
+      <div class="alchemy-gameplay-modes" id="alchemy-gameplay-modes" hidden aria-label="玩法材料分类">
+        <button class="alchemy-gameplay-mode" type="button" data-gameplay-mode="action" aria-pressed="true">游戏动作</button>
+        <button class="alchemy-gameplay-mode" type="button" data-gameplay-mode="system" aria-pressed="false">玩法机制</button>
+      </div>
+
+      <div class="alchemy-field" id="alchemy-field" role="tabpanel" aria-labelledby="alchemy-control-tab"></div>
+
+      <section class="alchemy-pot-zone" aria-label="炼金锅">
+        <div class="alchemy-drop-hint" id="alchemy-drop-hint">拖进锅里 · 点击也可加入</div>
+        <div class="alchemy-compound" id="alchemy-compound"><i data-lucide="sparkles" aria-hidden="true"></i><span>拖动 × 潜行</span></div>
+        <div class="alchemy-brewing-label" id="alchemy-brewing-label" hidden>合成中</div>
+        <div class="alchemy-pot-top" id="alchemy-pot" aria-label="将材料拖到这里">
+          <div class="alchemy-liquid" id="alchemy-liquid"></div>
+        </div>
+        <div class="alchemy-recipe-state" id="alchemy-recipe-state">锅里还没有材料</div>
+        <section class="alchemy-draft-panel" id="alchemy-draft-panel" hidden aria-live="polite">
+          <strong id="alchemy-draft-title"></strong>
+          <p>方案已保存，继续时不会重复调用对话模型。</p>
+          <button id="alchemy-resume-draft" type="button">继续生成海报</button>
+        </section>
+        <button class="alchemy-brew" id="alchemy-brew" type="button" disabled>请先放入 1 种材料</button>
+      </section>
+    </section>
+
+    <section class="alchemy-result-view" id="alchemy-result-view" aria-live="polite" hidden>
+      <div class="alchemy-result-top">
+        <button class="alchemy-back" id="alchemy-back" type="button">← 调整配方</button>
+        <button class="alchemy-settings-trigger" type="button" data-model-settings>模型设置</button>
+        <span class="alchemy-rarity" id="alchemy-rarity">传说</span>
+      </div>
+      <section class="alchemy-draft-panel" id="alchemy-result-draft-panel" hidden aria-live="polite">
+        <strong id="alchemy-result-draft-title"></strong>
+        <p>新方案已保存，继续时不会重复调用对话模型。</p>
+        <button id="alchemy-result-resume-draft" type="button">继续生成海报</button>
+      </section>
+      <figure class="alchemy-card-preview">
+        <a id="alchemy-card-open" target="_blank" rel="noopener" aria-label="打开完整创意说明海报"><img id="alchemy-card-image" alt="合成的创意说明海报" hidden></a>
+        <figcaption id="alchemy-card-status">正在准备可保存海报…</figcaption>
+      </figure>
+      <div id="alchemy-report-details" hidden>
+      <div class="alchemy-front-pot" aria-label="正面出锅状态"></div>
+      <div class="alchemy-poster-kicker">AI 创意炼金报告</div>
+      <h2 class="alchemy-result-title" id="alchemy-result-title">豚豚澡堂：一划焕新</h2>
+      <p class="alchemy-result-hook" id="alchemy-result-hook">滑动海绵擦开泥污，连续覆盖触发泡沫连击与造型揭晓；赚取金币扩建卡皮巴拉温泉澡堂。</p>
+      <figure class="alchemy-gameplay-reference">
+        <figcaption class="alchemy-gameplay-reference-head"><span>玩法参考图</span><span class="alchemy-gameplay-reference-type" id="alchemy-gameplay-reference-type">滑动 · 擦洗 · 覆盖清洁 · 软陶3D</span></figcaption>
+        <img class="alchemy-gameplay-reference-art" id="alchemy-gameplay-reference-art"  alt="手指滑动海绵擦洗泥泞卡皮巴拉，形成清洁覆盖轨迹与前后反差的软陶3D玩法画面">
+      </figure>
+      <div class="alchemy-report-grid">
+        <section class="alchemy-report-card"><span class="alchemy-report-icon report-icon-market" id="alchemy-icon-market" role="img" aria-label="市场机会图标"></span><span class="alchemy-report-key">市场机会</span><span class="alchemy-report-value" id="alchemy-report-market">等待实时生成</span></section>
+        <section class="alchemy-report-card"><span class="alchemy-report-icon report-icon-gameplay" id="alchemy-icon-gameplay" role="img" aria-label="核心玩法图标"></span><span class="alchemy-report-key">核心玩法</span><span class="alchemy-report-value" id="alchemy-report-gameplay-new">等待实时生成</span></section>
+        <section class="alchemy-report-card"><span class="alchemy-report-icon report-icon-hook" id="alchemy-icon-hook" role="img" aria-label="买量钩子图标"></span><span class="alchemy-report-key">买量钩子</span><span class="alchemy-report-value" id="alchemy-report-ad-hook">等待实时生成</span></section>
+        <section class="alchemy-report-card"><span class="alchemy-report-icon report-icon-art" id="alchemy-icon-art" role="img" aria-label="美术方向图标"></span><span class="alchemy-report-key">美术方向</span><span class="alchemy-report-value" id="alchemy-report-visual-new">等待实时生成</span></section>
+      </div>
+      <div class="alchemy-recipe-poster">
+        <span class="alchemy-report-icon report-icon-recipe" id="alchemy-icon-recipe" role="img" aria-label="配方图标"></span>
+        <div><span class="alchemy-report-key">本次配方</span><span class="alchemy-recipe-line" id="alchemy-report-recipe">硬约束：滑动 swipe｜AI：擦洗 × 覆盖清洁 × 连击变装 × 轻经营｜卡皮巴拉温泉澡堂｜软陶3D｜治愈动物 + 清洁ASMR + 夏季泡汤</span></div>
+      </div>
+      <div class="alchemy-auto-note">
+        <span class="alchemy-report-icon report-icon-auto" id="alchemy-icon-ai" role="img" aria-label="AI 自动补全图标"></span>
+        <div><span class="alchemy-report-key">AI补全说明</span><span id="alchemy-auto-note-text">保留用户唯一输入“滑动”，没有替换为拖动或点击。连续路径最适合擦洗反馈；清洁符合生活常识；卡皮巴拉泡汤一眼可懂；澡堂经营承接混合休闲深化趋势。</span></div>
+      </div>
+      <p class="alchemy-market-source" id="alchemy-market-source">市场来源会在本次实时检索后显示</p>
+      <div class="alchemy-report">
+        <div class="alchemy-report-row"><span class="alchemy-report-key">操作方式</span><span class="alchemy-report-value" id="alchemy-report-control">滑动 swipe（用户硬约束）</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">游戏动作</span><span class="alchemy-report-value" id="alchemy-report-action">擦洗</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">玩法机制</span><span class="alchemy-report-value" id="alchemy-report-gameplay">覆盖清洁 · 连击变装 · 澡堂轻经营</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">游戏类型</span><span class="alchemy-report-value" id="alchemy-report-type">混合休闲 · 清洁模拟 · 轻经营</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">美术风格</span><span class="alchemy-report-value" id="alchemy-report-visual">软陶3D · 大体块低材质</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">基础题材</span><span class="alchemy-report-value" id="alchemy-report-topic">卡皮巴拉温泉澡堂</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">实时催化</span><span class="alchemy-report-value" id="alchemy-report-world">全球卡皮巴拉治愈内容 · 清洁ASMR · 2026夏季泡汤反差</span></div>
+        <div class="alchemy-report-row"><span class="alchemy-report-key">合成判断</span><span class="alchemy-report-value" id="alchemy-report-why">滑动是唯一主操作；动作、机制、题材和美术均围绕连续擦洗轨迹服务，没有引入冲突输入。</span></div>
+      </div>
+      </div>
+      <div class="alchemy-result-actions">
+        <button class="alchemy-result-action" id="alchemy-remix" type="button">同配方再炼</button>
+        <button class="alchemy-result-action" id="alchemy-regenerate-image" type="button">重绘游戏画面</button>
+        <button class="alchemy-result-action" id="alchemy-expand" type="button" aria-expanded="false">展开方案</button>
+        <a class="alchemy-result-action is-primary" id="alchemy-save-card" download hidden>保存海报 PNG</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="/alchemy-art-assets.js?rev=release-20261007"></script>
+  <script src="/alchemy-catalog.js?rev=release-20261007"></script>
+  <script src="/alchemy-app.js?rev=release-20261007"></script>
+  <script src="/alchemy-model-settings.js?rev=release-20261007"></script>
+</div>
+</body>
+</html>
